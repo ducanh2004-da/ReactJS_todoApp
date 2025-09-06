@@ -1,0 +1,161 @@
+/* App Shell Styles */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(120deg, #f3f4fa 0%, #e9eafc 100%);
+}
+.app-header {
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(60,60,120,0.08);
+  padding: 0.5rem 0;
+  text-align: left;
+}
+.app-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-logo {
+  font-size: 2rem;
+}
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #23235b;
+  letter-spacing: 1px;
+  margin-right: 15rem;
+}
+.app-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+.app-nav a {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.08rem;
+  padding: 0.3rem 1.1rem;
+  border-radius: 1.5rem;
+  transition: background 0.18s, color 0.18s;
+}
+.app-nav a:hover {
+  background: #6366f1;
+  color: #fff;
+}
+.app-main {
+  flex: 1 1 auto;
+  max-width: 1200px;
+  margin: 2.5rem auto 0 auto;
+  width: 100%;
+  padding: 0 1.5rem;
+}
+.app-footer {
+  background: #fff;
+  color: #888;
+  text-align: center;
+  font-size: 1rem;
+  padding: 1.2rem 0 1.1rem 0;
+  margin-top: 2.5rem;
+  box-shadow: 0 -2px 12px rgba(60,60,120,0.06);
+}
+@media (max-width: 700px) {
+  .app-header-content, .app-main {
+    padding: 0 0.7rem;
+  }
+  .app-title {
+    font-size: 1.1rem;
+  }
+  .app-nav {
+    gap: 0.7rem;
+  }
+}
+@media (max-width: 900px) {
+  .app-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0 1rem;
+  }
+  .app-title {
+    font-size: 1.1rem;
+    margin-right: 0;
+    margin-bottom: 0.3rem;
+  }
+  .app-nav {
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .app-nav a {
+    font-size: 1rem;
+    padding: 0.3rem 0.7rem;
+  }
+  .app-main {
+    padding: 0 0.5rem;
+    margin-top: 1.2rem;
+  }
+  .app-footer {
+    font-size: 0.95rem;
+    padding: 0.7rem 0 0.7rem 0;
+    margin-top: 1.2rem;
+  }
+}
+#root {
+  max-width: 1500px;
+  width: 1300px;
+  margin: 0 auto;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  #root {
+    width: 100vw;
+    max-width: 100vw;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .app-main {
+    max-width: 100vw;
+    padding: 0 0.2rem;
+  }
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

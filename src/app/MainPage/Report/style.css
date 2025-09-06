@@ -1,0 +1,91 @@
+/* Report Page Custom Styles */
+.report-card {
+	background: #fff;
+	border-radius: 20px;
+	box-shadow: 0 8px 32px rgba(60, 60, 120, 0.12);
+	padding: 2.5rem;
+	margin: 2rem auto;
+	max-width: 700px;
+	transition: box-shadow 0.2s;
+}
+.report-card:hover {
+	box-shadow: 0 12px 40px rgba(60, 60, 120, 0.18);
+}
+.report-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 2rem;
+}
+.report-icon {
+	width: 2.2rem;
+	height: 2.2rem;
+	color: #6366f1;
+}
+.report-header h2 {
+	font-size: 2rem;
+	font-weight: 700;
+	color: #3b3b6d;
+	margin: 0;
+}
+.report-loading {
+	color: #888;
+	font-size: 1.1rem;
+	margin-bottom: 1rem;
+}
+.report-error {
+	color: #e53e3e;
+	font-size: 1.1rem;
+	margin-bottom: 1rem;
+}
+.report-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1.5rem;
+	margin-top: 1rem;
+}
+@media (min-width: 700px) {
+	.report-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+.report-stat {
+	background: linear-gradient(135deg, #f3f4fa 0%, #e9eafc 100%);
+	border-radius: 16px;
+	padding: 1.5rem 1rem;
+	box-shadow: 0 2px 12px rgba(60, 60, 120, 0.08);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	transition: transform 0.15s;
+}
+.report-stat:hover {
+	transform: translateY(-4px) scale(1.03);
+}
+.report-stat-icon {
+	width: 2rem;
+	height: 2rem;
+	margin-bottom: 0.5rem;
+}
+.report-tasks .report-stat-icon {
+	color: #6366f1;
+}
+.report-inprogress .report-stat-icon {
+	color: #fbbf24;
+}
+.report-tags .report-stat-icon {
+	color: #22c55e;
+}
+.report-stat-label {
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: #4b4b7d;
+	margin-bottom: 0.3rem;
+}
+.report-stat-value {
+	font-size: 2.2rem;
+	font-weight: 700;
+	color: #23235b;
+	margin-top: 0.2rem;
+	letter-spacing: 1px;
+}

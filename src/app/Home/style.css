@@ -1,0 +1,86 @@
+/* Home Page Custom Styles */
+.home-hero {
+	min-height: 80vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3rem;
+	background: linear-gradient(120deg, #f3f4fa 0%, #e9eafc 100%);
+	padding: 2rem 1rem;
+	box-sizing: border-box;
+}
+.home-hero-content {
+	max-width: 480px;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 2rem;
+}
+.home-title {
+	font-size: 2.7rem;
+	font-weight: 800;
+	color: #23235b;
+	margin: 0;
+	line-height: 1.1;
+}
+.home-title .accent {
+	color: #6366f1;
+	background: linear-gradient(90deg, #6366f1 40%, #a5b4fc 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+}
+.home-desc {
+	font-size: 1.2rem;
+	color: #4b4b7d;
+	margin: 0;
+}
+.home-actions {
+	display: flex;
+	gap: 1rem;
+	margin-top: 0.5rem;
+}
+.home-btn {
+	display: inline-block;
+	padding: 0.75rem 2.2rem;
+	font-size: 1.1rem;
+	font-weight: 600;
+	border-radius: 2rem;
+	border: none;
+	text-decoration: none;
+	transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+	box-shadow: 0 2px 12px rgba(60, 60, 120, 0.08);
+	cursor: pointer;
+}
+.home-btn-primary {
+	background: linear-gradient(90deg, #6366f1 60%, #a5b4fc 100%);
+	color: #fff;
+}
+.home-btn-primary:hover {
+	background: linear-gradient(90deg, #4f46e5 60%, #818cf8 100%);
+	color: #fff;
+}
+.home-btn-secondary {
+	background: #fff;
+	color: #6366f1;
+	border: 2px solid #6366f1;
+}
+.home-btn-secondary:hover {
+	background: #6366f1;
+	color: #fff;
+}
+.home-hero-graphic {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+@media (max-width: 900px) {
+	.home-hero {
+		flex-direction: column;
+		gap: 2rem;
+		min-height: 60vh;
+	}
+	.home-hero-graphic {
+		margin-top: 1.5rem;
+	}
+}
