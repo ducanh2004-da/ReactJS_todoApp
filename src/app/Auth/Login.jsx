@@ -119,9 +119,9 @@ export default function Login() {
                 </div>
                 {message && <div className="auth-message auth-message-error">{message}</div>}
                 {error && <div className="auth-message auth-message-error">{error.message}</div>}
-                <p className="auth-link">
+                {/* <p className="auth-link">
                     Don't have an account? <a href="/signup">Sign Up</a>
-                </p>
+                </p> */}
             </div>
         </div>
     );

@@ -84,9 +84,9 @@ export default function Register() {
                 </form>
                 {message && <div className="auth-message auth-message-error">{message}</div>}
                 {error && <div className="auth-message auth-message-error">{error.message}</div>}
-                <p className="auth-link">
+                {/* <p className="auth-link">
                     Have an account? <a href="/signin">Sign In</a>
-                </p>
+                </p> */}
             </div>
         </div>
     );
