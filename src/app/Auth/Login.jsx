@@ -73,7 +73,6 @@ export default function Login() {
                   AuthVar.firstName = loginResult.user.firstName || '';
                   AuthVar.lastName = loginResult.user.lastName || '';
                 }
-                console.log(AuthVar);
                 navigate('/task');
             } else {
                 setMessage(loginResult.message || "Login failed. Please try again.");
@@ -129,7 +128,6 @@ export default function Login() {
             setError('No credential received from Google');
             return;
         }
-        console.log('idToken:', response.credential);
          try {
             const res = await client.mutate({
                 mutation: GOOGLE_OAUTH_LOGIN,
@@ -158,7 +156,6 @@ export default function Login() {
         } finally {
             setLoading(false);
         }
-        console.log('segments:', response.credential.split('.').length); // should be 3
     }
 
 

@@ -63,7 +63,6 @@ export default function Task() {
   `;
 
         useEffect(() => {
-                console.log(AuthVar);
                 client
                         .query({
                                 query: GET_TASKS,

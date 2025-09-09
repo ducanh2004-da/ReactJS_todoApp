@@ -56,7 +56,6 @@ export default function Register() {
                             AuthVar.email = registerResult.user.email || '';
                             AuthVar.firstName = registerResult.user.firstName || '';
                             AuthVar.lastName = registerResult.user.lastName || '';
-                            console.log(AuthVar);
                             navigate('/task');
             }
             else {

@@ -96,7 +96,6 @@ export default function TaskForm({ editId, open, onClose, rows, onTaskChange }) 
         setLoading(true);
         setError(null);
         try {
-            console.log(AuthVar);
             let data;
             if (editId) {
                 // Edit mode
