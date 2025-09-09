@@ -2,6 +2,7 @@ import { client } from '../../graphql/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {AuthVar} from './AuthVar';
 import './style.css';
 export default function Register() {
     const [result, setResult] = useState(null);
@@ -20,6 +21,12 @@ export default function Register() {
                 success
                 message
                 token
+                user {
+                  id
+                  email
+                  firstName
+                  lastName
+                }
             }
         }
     `;
@@ -41,10 +48,16 @@ export default function Register() {
             const registerResult = res.data.signUp;
             setResult(registerResult);
             if(registerResult.success){
-                if(registerResult.token){
-                    localStorage.setItem('access_token', registerResult.token);
-                }
-                navigate('/task');
+                            if (registerResult.token) {
+                                localStorage.setItem('access_token', registerResult.token);
+                            }
+                            // Mutate AuthVar properties instead of reassigning
+                            AuthVar.userId = registerResult.user.id || '';
+                            AuthVar.email = registerResult.user.email || '';
+                            AuthVar.firstName = registerResult.user.firstName || '';
+                            AuthVar.lastName = registerResult.user.lastName || '';
+                            console.log(AuthVar);
+                            navigate('/task');
             }
             else {
                 setMessage(registerResult.message || "Registration failed. Please try again.");

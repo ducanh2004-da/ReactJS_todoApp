@@ -4,6 +4,7 @@ import { client } from '../../../graphql/client';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import TaskForm from './TaskForm';
+import { AuthVar } from '../../Auth/AuthVar';
 
 export default function Task() {
         const [loading, setLoading] = useState(true);
@@ -15,8 +16,8 @@ export default function Task() {
         const paginationModel = { page: 0, pageSize: 5 };
 
         const GET_TASKS = gql`
-                query GetTasks($currentPage: Float!) {
-                        tasks(currentPage: $currentPage) {
+                query GetTasks($currentPage: Float!, $userId: Float!) {
+                        tasks(currentPage: $currentPage, userId: $userId) {
                                 totalTask
                                 totalPage
                                 items {
@@ -46,8 +47,8 @@ export default function Task() {
 }
         `
         const SEARCH_TASKS = gql`
-        mutation SearchTask($title: String!) {
-  search(title: $title) {
+        mutation SearchTask($title: String!, $userId: Float!) {
+  search(title: $title, userId: $userId) {
     totalTask
     totalPage
     items {
@@ -62,10 +63,14 @@ export default function Task() {
   `;
 
         useEffect(() => {
+                console.log(AuthVar);
                 client
                         .query({
                                 query: GET_TASKS,
-                                variables: { currentPage: Number(paginationModel.page) + 1 }
+                                variables: {
+                                        currentPage: Number(paginationModel.page) + 1,
+                                        userId: Number(AuthVar.userId)
+                                }
                         })
                         .then(({ data }) => {
                                 setRows(data.tasks.items);
@@ -100,16 +105,17 @@ export default function Task() {
                 event.preventDefault();
                 setLoading(true);
                 setError(null);
-                try{
+                try {
                         const res = await client.mutate({
                                 mutation: SEARCH_TASKS,
                                 variables: {
-                                        title: event.target.search.value
+                                        title: event.target.search.value,
+                                        userId: Number(AuthVar.userId)
                                 },
                         });
                         setRows(res.data.search.items);
                         setLoading(false);
-                }catch(err){
+                } catch (err) {
                         setError(err);
                 }
         }
@@ -190,6 +196,15 @@ export default function Task() {
                                                 setEditId(null);
                                         }}
                                         rows={rows}
+                                        onTaskChange={(task, editId) => {
+                                                if (editId) {
+                                                        // Edit mode: update the task in the list
+                                                        setRows(prevRows => prevRows.map(row => row.id === task.id ? task : row));
+                                                } else {
+                                                        // Add mode: add the new task to the top
+                                                        setRows(prevRows => [task, ...prevRows]);
+                                                }
+                                        }}
                                 />
                         </div>
                         <b className="block text-left text-lg text-indigo-600 mb-2">List of Tasks:</b>

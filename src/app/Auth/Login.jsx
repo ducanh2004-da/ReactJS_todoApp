@@ -1,14 +1,18 @@
 import { client } from '../../graphql/client';
 import { gql } from '@apollo/client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {AuthVar} from './AuthVar';
 import './style.css';
 
 export default function Login() {
+    const CLIENT_ID = import.meta.env.VITE_REACT_APP_GOOGLE_CLIENT_ID || import.meta.env.REACT_APP_GOOGLE_CLIENT_ID;
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
+    const [backendResp, setBackendResp] = useState(null);
+    const googleBtnRef = useRef(null);
     const navigate = useNavigate();
     const POST_LOGIN = gql`
         mutation Login($email: String!, $password: String!) {
@@ -19,6 +23,27 @@ export default function Login() {
                 success
                 message
                 token
+                user {
+                  id
+                  email
+                  firstName
+                  lastName
+                }
+            }
+        }
+    `;
+    const GOOGLE_OAUTH_LOGIN = gql`
+        mutation GoogleLogin($idToken: String!) {
+            googleLogin(idToken: $idToken) {
+                success
+                message
+                token
+                user {
+                  id
+                  email
+                  firstName
+                  lastName
+                }
             }
         }
     `;
@@ -41,6 +66,14 @@ export default function Login() {
                 if (loginResult.token) {
                     localStorage.setItem('access_token', loginResult.token);
                 }
+                // Mutate AuthVar properties instead of reassigning
+                if (loginResult.user) {
+                  AuthVar.userId = loginResult.user.id || '';
+                  AuthVar.email = loginResult.user.email || '';
+                  AuthVar.firstName = loginResult.user.firstName || '';
+                  AuthVar.lastName = loginResult.user.lastName || '';
+                }
+                console.log(AuthVar);
                 navigate('/task');
             } else {
                 setMessage(loginResult.message || "Login failed. Please try again.");
@@ -51,6 +84,83 @@ export default function Login() {
             setLoading(false);
         }
     }
+
+    // Load Google Identity Services script and render button
+    useEffect(() => {
+        function loadGoogleScript(cb) {
+            if (window.google && window.google.accounts && window.google.accounts.id) {
+                cb();
+                return;
+            }
+            const existingScript = document.getElementById('google-identity-services');
+            if (!existingScript) {
+                const script = document.createElement('script');
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.async = true;
+                script.defer = true;
+                script.id = 'google-identity-services';
+                script.onload = cb;
+                document.body.appendChild(script);
+            } else {
+                if (existingScript.onload) {
+                    existingScript.onload = () => { existingScript.onload = null; cb(); };
+                } else {
+                    cb();
+                }
+            }
+        }
+        loadGoogleScript(() => {
+            if (window.google && window.google.accounts && window.google.accounts.id && googleBtnRef.current) {
+                window.google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: handleCredentialResponse,
+                });
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'outline',
+                    size: 'large',
+                });
+            }
+        });
+    }, [CLIENT_ID]);
+
+    // Log the Google idToken to the console
+    async function handleCredentialResponse(response) {
+        if (!response || !response.credential) {
+            setError('No credential received from Google');
+            return;
+        }
+        console.log('idToken:', response.credential);
+         try {
+            const res = await client.mutate({
+                mutation: GOOGLE_OAUTH_LOGIN,
+                variables: {
+                    idToken: response.credential
+                }
+            });
+            const loginResult = res.data.googleLogin;
+            setResult(loginResult);
+            if (loginResult.success) {
+                if (loginResult.token) {
+                    localStorage.setItem('access_token', loginResult.token);
+                }
+                if (loginResult.user) {
+                  AuthVar.userId = loginResult.user.id || '';
+                  AuthVar.email = loginResult.user.email || '';
+                  AuthVar.firstName = loginResult.user.firstName || '';
+                  AuthVar.lastName = loginResult.user.lastName || '';
+                }
+                navigate('/task');
+            } else {
+                setMessage(loginResult.message || "Login failed. Please try again.");
+            }
+        } catch (err) {
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
+        console.log('segments:', response.credential.split('.').length); // should be 3
+    }
+
 
     return (
         <div className="auth-container">
@@ -74,51 +184,28 @@ export default function Login() {
                 <div style={{ textAlign: 'center', margin: '0.5rem 0 0' }}>
                     <span style={{ color: '#aaa', fontWeight: 500 }}>or</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <button
-                        type="button"
-                        className="google-login-btn"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.7rem',
-                            background: '#fff',
-                            border: '1.5px solid #e5e7eb',
-                            borderRadius: '2rem',
-                            padding: '0.7rem 2.2rem',
-                            fontWeight: 600,
-                            fontSize: '1.08rem',
-                            color: '#23235b',
-                            boxShadow: '0 2px 12px rgba(60,60,120,0.08)',
-                            cursor: 'pointer',
-                            transition: 'background 0.18s, color 0.18s, box-shadow 0.18s',
-                        }}
-                        onClick={() => {
-                            if (window.google && window.google.accounts && window.google.accounts.id) {
-                               setMessage('Google login not available. Try with form.');
-                            } else {
-                                setMessage('Google login not available. Try with form.');
-                            }
-                        }}
-                    >
-                        <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g clipPath="url(#clip0_17_40)">
-                                <path d="M47.532 24.552c0-1.636-.146-3.2-.418-4.704H24.48v9.02h12.98c-.56 3.02-2.24 5.58-4.78 7.3v6.06h7.74c4.54-4.18 7.112-10.34 7.112-17.676z" fill="#4285F4"/>
-                                <path d="M24.48 48c6.48 0 11.92-2.14 15.89-5.82l-7.74-6.06c-2.14 1.44-4.88 2.3-8.15 2.3-6.26 0-11.56-4.22-13.46-9.9H2.5v6.22C6.46 43.78 14.7 48 24.48 48z" fill="#34A853"/>
-                                <path d="M11.02 28.52a14.77 14.77 0 010-9.44v-6.22H2.5a24.01 24.01 0 000 21.88l8.52-6.22z" fill="#FBBC05"/>
-                                <path d="M24.48 9.54c3.54 0 6.68 1.22 9.17 3.62l6.87-6.87C36.4 2.14 30.96 0 24.48 0 14.7 0 6.46 4.22 2.5 10.34l8.52 6.22c1.9-5.68 7.2-9.9 13.46-9.9z" fill="#EA4335"/>
-                            </g>
-                            <defs>
-                                <clipPath id="clip0_17_40">
-                                    <rect width="48" height="48" fill="#fff"/>
-                                </clipPath>
-                            </defs>
-                        </svg>
-                        <span>Sign in with Google</span>
-                    </button>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '1.2rem 0' }}>
+                    <div ref={googleBtnRef}></div>
                 </div>
-                {message && <div className="auth-message auth-message-error">{message}</div>}
-                {error && <div className="auth-message auth-message-error">{error.message}</div>}
+                <div style={{ marginTop: 12 }}>
+                    {loading && <div>Loading...</div>}
+                    {message && <div className="auth-message auth-message-error">{message}</div>}
+                    {error && <div className="auth-message auth-message-error">{typeof error === 'string' ? error : error?.message}</div>}
+                    {/* Show a more helpful message for Google OAuth errors */}
+                    {typeof error === 'string' && error.includes('google.com') && (
+                        <div style={{ color: 'crimson', marginTop: 8 }}>
+                            <strong>Google login failed.</strong><br />
+                            Please check your Google Cloud Console OAuth settings.<br />
+                            See the code comments above for details.
+                        </div>
+                    )}
+                    {backendResp && (
+                        <div>
+                            <h3>Backend response</h3>
+                            <pre style={{ background: '#f6f8fa', padding: 8 }}>{JSON.stringify(backendResp, null, 2)}</pre>
+                        </div>
+                    )}
+                </div>
                 {/* <p className="auth-link">
                     Don't have an account? <a href="/signup">Sign Up</a>
                 </p> */}

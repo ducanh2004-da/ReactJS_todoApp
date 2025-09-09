@@ -5,6 +5,9 @@
   flex-direction: column;
   background: linear-gradient(120deg, #f3f4fa 0%, #e9eafc 100%);
 }
+.text-blue{
+  color: blue;
+}
 .app-header {
   background: #fff;
   box-shadow: 0 4px 24px rgba(60,60,120,0.08);

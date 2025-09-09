@@ -8,8 +8,10 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-export default function TaskForm({ editId, open, onClose, rows }) {
+import { AuthVar } from '../../Auth/AuthVar';
+export default function TaskForm({ editId, open, onClose, rows, onTaskChange }) {
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogInfo, setInfo] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [result, setResult] = useState(null);
@@ -41,10 +43,14 @@ export default function TaskForm({ editId, open, onClose, rows }) {
         setDialogOpen(false);
         if (onClose) onClose();
     };
+    const handleCloseInfo = () => {
+        setInfo(false);
+        if(onClose) onClose();
+    }
 
     const ADD_TASK = gql`
-        mutation AddTask($title: String!, $description: String!) {
-            addTask(data: {
+        mutation AddTask($title: String!, $description: String!, $userId: Float!) {
+            addTask(userId: $userId, data: {
                 title: $title,
                 dueAt: "2025-09-02T09:30:00.000Z",
                 description: $description,
@@ -90,6 +96,7 @@ export default function TaskForm({ editId, open, onClose, rows }) {
         setLoading(true);
         setError(null);
         try {
+            console.log(AuthVar);
             let data;
             if (editId) {
                 // Edit mode
@@ -107,6 +114,7 @@ export default function TaskForm({ editId, open, onClose, rows }) {
                 const res = await client.mutate({
                     mutation: ADD_TASK,
                     variables: {
+                        userId: Number(AuthVar.userId),
                         title: formValues.title,
                         description: formValues.description,
                     },
@@ -114,6 +122,9 @@ export default function TaskForm({ editId, open, onClose, rows }) {
                 data = res.data.addTask;
             }
             setResult(data);
+            setInfo(true);
+            // Notify parent to update the table immediately
+            if (onTaskChange) onTaskChange(data, editId);
             handleClose();
         } catch (err) {
             setError(err);
@@ -170,12 +181,20 @@ export default function TaskForm({ editId, open, onClose, rows }) {
             </Dialog>
             {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
             {result && (
-                <div style={{ marginTop: 16 }}>
-                    <b>{editId ? 'Task Updated:' : 'Task Created:'}</b>
-                    <div>ID: {result.id}</div>
-                    <div>Title: {result.title}</div>
-                    <div>Description: {result.description}</div>
-                </div>
+                <Dialog open={dialogInfo} onClose={handleCloseInfo}>
+                    <DialogTitle>{editId ? 'Task Updated!' : 'Task Created!'}</DialogTitle>
+                    <DialogContent>
+                        <div style={{ marginTop: 16 }}>
+                            <b>{editId ? 'Task Updated:' : 'Task Created:'}</b>
+                            <div>ID: {result.id}</div>
+                            <div>Title: {result.title}</div>
+                            <div>Description: {result.description}</div>
+                        </div>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleClose}>Close</Button>
+                    </DialogActions>
+                </Dialog>
             )}
         </React.Fragment>
     );

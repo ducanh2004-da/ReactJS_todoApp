@@ -3,6 +3,7 @@ import './Main.css'
 import Task from './Task/Task.jsx';
 import Tag from './Tag/Tag.jsx';
 import Report from './Report/Report.jsx';
+import { AuthVar } from '../Auth/AuthVar.jsx';
 
 function Main() {
   const [activeTab, setActiveTab] = useState('task');
@@ -13,6 +14,9 @@ function Main() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center">
+      <div className="account">
+        <p>Chào mừng {AuthVar.firstName ? (<span className='text-blue'>{AuthVar.firstName + AuthVar.lastName}</span>) : (<span className='text-blue'>No name</span>)} đã thăm web mình nha</p>
+      </div>
     <button className='logout' onClick={handleLogout}>Log out</button>
       <header className="w-full py-6 bg-white shadow-md mb-8 flex flex-col items-center rounded-b-2xl">
         <h1 className="text-4xl font-bold text-indigo-700 mb-2 tracking-tight">Todo List App</h1>
@@ -42,9 +46,6 @@ function Main() {
         {activeTab === 'tag' && <Tag />}
         {activeTab === 'report' && <Report />}
       </main>
-      <footer className="w-full py-4 text-center text-gray-400 text-sm mt-8">
-        &copy; {new Date().getFullYear()} Todo List App. All rights reserved.
-      </footer>
     </div>
   );
 }
