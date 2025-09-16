@@ -5,6 +5,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import TaskForm from './TaskForm';
 import { AuthVar } from '../../Auth/AuthVar';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function Task() {
         const [loading, setLoading] = useState(true);
@@ -38,11 +39,14 @@ export default function Task() {
         const DELETE_TASKS = gql`
         mutation DeleteTask($id: Float!) {
   deleteTask(id: $id) { 
-    id
-    title
-    description
-    dueAt
-    status
+    message
+    data {
+        id
+    	title
+    	description
+    	dueAt
+    	status
+    }
   }
 }
         `
@@ -61,8 +65,7 @@ export default function Task() {
   }
 }
   `;
-
-        useEffect(() => {
+        function refreshData() {
                 client
                         .query({
                                 query: GET_TASKS,
@@ -79,7 +82,8 @@ export default function Task() {
                                 setError(err);
                                 setLoading(false);
                         });
-        }, []);
+        }
+        useEffect(refreshData, []);
 
         const handleEdit = (id) => {
                 setEditId(id);
@@ -93,8 +97,12 @@ export default function Task() {
                                 variables: { id: Number(id) }
                         });
                         const deleted = res.data.deleteTask;
-                        if (deleted && deleted.id) {
-                                setRows(prevRows => prevRows.filter(row => row.id !== deleted.id));
+                        if (deleted.data && deleted.data.id) {
+                                toast.success(res.data.message);
+                                refreshData();
+                        }
+                        else{
+                                toast.error(res.data.message);
                         }
                 } catch (err) {
                         setError(err);
@@ -121,12 +129,12 @@ export default function Task() {
 
         const columns = [
                 { field: 'id', headerName: 'ID', width: 70 },
-                { field: 'title', headerName: 'Title', width: 300 },
-                { field: 'description', headerName: 'Description', width: 500 },
+                { field: 'title', headerName: 'Title', width: 250 },
+                { field: 'description', headerName: 'Description', width: 450 },
                 {
                         field: 'tags',
                         headerName: 'Tags',
-                        width: 300,
+                        width: 150,
                         renderCell: (params) => {
                                 const tags = params.row.tags || [];
                                 return (
@@ -206,6 +214,7 @@ export default function Task() {
                                         }}
                                 />
                         </div>
+                        <Toaster position="top-right" />
                         <b className="block text-left text-lg text-indigo-600 mb-2">List of Tasks:</b>
                         <Paper sx={{ height: 400, width: '100%', borderRadius: '1rem', boxShadow: 3 }}>
                                 <DataGrid
