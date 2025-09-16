@@ -14,6 +14,7 @@ export default function Task() {
         // const [tags, setTags] = useState([])
         const [editId, setEditId] = useState(null);
         const [formOpen, setFormOpen] = useState(false);
+        const [totalTag, setTotalTag] = useState([]);
         const paginationModel = { page: 0, pageSize: 5 };
 
         const GET_TASKS = gql`
@@ -36,6 +37,16 @@ export default function Task() {
                         }
                 }
         `;
+        const GET_TAGS = gql`
+                  query {
+                      tags {
+                          id
+                          title
+                          description
+                          taskId
+                      }
+                  }
+              `;
         const DELETE_TASKS = gql`
         mutation DeleteTask($id: Float!) {
   deleteTask(id: $id) { 
@@ -82,6 +93,17 @@ export default function Task() {
                                 setError(err);
                                 setLoading(false);
                         });
+
+                client
+                                .query({ query: GET_TAGS })
+                                .then(({ data }) => {
+                                    setTotalTag(data.tags)
+                                    setLoading(false);
+                                })
+                                .catch((error) => {
+                                    setError(error);
+                                    setLoading(false);
+                                });
         }
         useEffect(refreshData, []);
 
@@ -198,6 +220,7 @@ export default function Task() {
                                         className="mt-5"
                                         editId={editId}
                                         open={formOpen}
+                                        totalTag = {totalTag}
                                         onClose={() => {
                                                 setFormOpen(false);
                                                 setEditId(null);
