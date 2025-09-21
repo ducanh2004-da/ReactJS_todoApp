@@ -8,6 +8,8 @@ import Main from './MainPage/Main.jsx';
 import Register from './Auth/Register.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 import { BrowserRouter, Routes, Route, Link, Outlet } from 'react-router-dom';
+import RequireRole from './components/RequireRole.jsx';
+import AdminPage from './Admin/adminPage.jsx';
 function App() {
   return (
     <BrowserRouter>
@@ -21,6 +23,7 @@ function App() {
               <Link to="/signin">Sign In</Link>
               <Link to="/signup">Sign Up</Link>
               <Link to="/task">Main Page</Link>
+              <Link to="/admin">Admin Page</Link>
             </nav>
           </div>
         </header>
@@ -30,10 +33,14 @@ function App() {
             <Route path="/signin" element={<Login />} />
             <Route path="/signup" element={<Register />} />
             <Route path="/task" element={
-              <ProtectedRoute>
+              <RequireRole allowedRoles={['USER','ADMIN']}>
                 <Main />
-              </ProtectedRoute>
+              </RequireRole>
             } />
+            <Route path='/admin' element={
+              <RequireRole allowedRoles={['ADMIN']}>
+                <AdminPage />
+              </RequireRole>} />
           </Routes>
         </main>
         <footer className="app-footer">

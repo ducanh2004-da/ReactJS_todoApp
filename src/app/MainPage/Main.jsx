@@ -8,7 +8,7 @@ import { AuthVar } from '../Auth/AuthVar.jsx';
 function Main() {
   const [activeTab, setActiveTab] = useState('task');
   function handleLogout() {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem('token');
     window.location.href = '/signin';
   }
 

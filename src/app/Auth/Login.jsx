@@ -2,7 +2,7 @@ import { client } from '../../graphql/client';
 import { gql } from '@apollo/client';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {AuthVar} from './AuthVar';
+import { AuthVar } from './AuthVar';
 import './style.css';
 
 export default function Login() {
@@ -64,16 +64,25 @@ export default function Login() {
             setResult(loginResult);
             if (loginResult.success) {
                 if (loginResult.token) {
-                    localStorage.setItem('access_token', loginResult.token);
+                    localStorage.setItem('token', loginResult.token);
                 }
                 // Mutate AuthVar properties instead of reassigning
                 if (loginResult.user) {
-                  AuthVar.userId = loginResult.user.id || '';
-                  AuthVar.email = loginResult.user.email || '';
-                  AuthVar.firstName = loginResult.user.firstName || '';
-                  AuthVar.lastName = loginResult.user.lastName || '';
+                    AuthVar.userId = loginResult.user.id || '';
+                    AuthVar.email = loginResult.user.email || '';
+                    AuthVar.firstName = loginResult.user.firstName || '';
+                    AuthVar.lastName = loginResult.user.lastName || '';
                 }
-                navigate('/task');
+                const token = loginResult.token;
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const role = payload.role;
+                    if (role === 'ADMIN') navigate('/admin');
+                    else navigate('/task');
+                } catch (err) {
+                    // fallback: call me query to fetch role then redirect
+                    navigate('/');
+                }
             } else {
                 setMessage(loginResult.message || "Login failed. Please try again.");
             }
@@ -128,7 +137,7 @@ export default function Login() {
             setError('No credential received from Google');
             return;
         }
-         try {
+        try {
             const res = await client.mutate({
                 mutation: GOOGLE_OAUTH_LOGIN,
                 variables: {
@@ -139,13 +148,13 @@ export default function Login() {
             setResult(loginResult);
             if (loginResult.success) {
                 if (loginResult.token) {
-                    localStorage.setItem('access_token', loginResult.token);
+                    localStorage.setItem('token', loginResult.token);
                 }
                 if (loginResult.user) {
-                  AuthVar.userId = loginResult.user.id || '';
-                  AuthVar.email = loginResult.user.email || '';
-                  AuthVar.firstName = loginResult.user.firstName || '';
-                  AuthVar.lastName = loginResult.user.lastName || '';
+                    AuthVar.userId = loginResult.user.id || '';
+                    AuthVar.email = loginResult.user.email || '';
+                    AuthVar.firstName = loginResult.user.firstName || '';
+                    AuthVar.lastName = loginResult.user.lastName || '';
                 }
                 navigate('/task');
             } else {

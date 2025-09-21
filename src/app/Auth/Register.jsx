@@ -2,7 +2,7 @@ import { client } from '../../graphql/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {AuthVar} from './AuthVar';
+import { AuthVar } from './AuthVar';
 import './style.css';
 export default function Register() {
     const [result, setResult] = useState(null);
@@ -47,16 +47,25 @@ export default function Register() {
             });
             const registerResult = res.data.signUp;
             setResult(registerResult);
-            if(registerResult.success){
-                            if (registerResult.token) {
-                                localStorage.setItem('access_token', registerResult.token);
-                            }
-                            // Mutate AuthVar properties instead of reassigning
-                            AuthVar.userId = registerResult.user.id || '';
-                            AuthVar.email = registerResult.user.email || '';
-                            AuthVar.firstName = registerResult.user.firstName || '';
-                            AuthVar.lastName = registerResult.user.lastName || '';
-                            navigate('/task');
+            if (registerResult.success) {
+                if (registerResult.token) {
+                    localStorage.setItem('token', registerResult.token);
+                }
+                // Mutate AuthVar properties instead of reassigning
+                AuthVar.userId = registerResult.user.id || '';
+                AuthVar.email = registerResult.user.email || '';
+                AuthVar.firstName = registerResult.user.firstName || '';
+                AuthVar.lastName = registerResult.user.lastName || '';
+                const token = registerResult.token;
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const role = payload.role;
+                    if (role === 'ADMIN') navigate('/admin');
+                    else navigate('/task');
+                } catch (err) {
+                    // fallback: call me query to fetch role then redirect
+                    navigate('/');
+                }
             }
             else {
                 setMessage(registerResult.message || "Registration failed. Please try again.");
