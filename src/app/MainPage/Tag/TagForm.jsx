@@ -20,12 +20,10 @@ export default function TagForm({ onCreate }) {
             addTag(data: {
                 title: $title,
                 description: $description,
-                taskId: 5
             }) {
                 id
                 title
                 description
-                taskId
             }
         }
     `;

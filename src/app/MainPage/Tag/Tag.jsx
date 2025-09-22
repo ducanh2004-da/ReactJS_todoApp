@@ -15,7 +15,6 @@ export default function Tag() {
                 id
                 title
                 description
-                taskId
             }
         }
     `;
@@ -25,7 +24,6 @@ export default function Tag() {
                 id
                 title
                 description
-                taskId
             }
         }
     `;
