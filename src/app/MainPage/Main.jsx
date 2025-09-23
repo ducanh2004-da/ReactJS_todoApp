@@ -4,9 +4,11 @@ import Task from './Task/Task.jsx';
 import Tag from './Tag/Tag.jsx';
 import Report from './Report/Report.jsx';
 import { AuthVar } from '../Auth/AuthVar.jsx';
+import { useAuthStore } from '../../stores/useAuthStore.js';
 
 function Main() {
   const [activeTab, setActiveTab] = useState('task');
+  const {user: authUser} = useAuthStore();
   function handleLogout() {
     localStorage.removeItem('token');
     window.location.href = '/signin';
@@ -15,7 +17,7 @@ function Main() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center">
       <div className="account">
-        <p>Chào mừng {AuthVar.firstName ? (<span className='text-blue'>{AuthVar.firstName + AuthVar.lastName}</span>) : (<span className='text-blue'>No name</span>)} đã thăm web mình nha</p>
+        <p>Chào mừng {authUser.firstName ? (<span className='text-blue'>{authUser.firstName + authUser.lastName}</span>) : (<span className='text-blue'>No name</span>)} đã thăm web mình nha</p>
       </div>
     <button className='logout' onClick={handleLogout}>Log out</button>
       <header className="w-full py-6 bg-white shadow-md mb-8 flex flex-col items-center rounded-b-2xl">

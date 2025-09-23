@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { gql } from '@apollo/client';
-import { client } from '../graphql/client.js'; // adjust path if needed
+import { client } from '../configs/client.config.js'; // adjust path if needed
 import './App.css'
 import Home from './Home/Home.jsx';
 import Login from './Auth/Login.jsx';

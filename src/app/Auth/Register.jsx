@@ -1,81 +1,70 @@
-import { client } from '../../graphql/client';
-import { gql } from '@apollo/client';
+// src/app/Auth/Register.jsx  (chỉ phần chính; điều chỉnh path import)
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { graphqlRequest } from '../../configs/api.config';
 import { AuthVar } from './AuthVar';
+import { POST_REGISTER } from './services/register.service';
 import './style.css';
+import { useAuthStore } from '../../stores/useAuthStore';
+
 export default function Register() {
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const [backendError, setBackendError] = useState(null);
     const navigate = useNavigate();
-    const POST_REGISTER = gql`
-        mutation Register($email: String!, $password: String!, $firstName: String!, $lastName: String!) {
-            signUp(data: {
-                email: $email,
-                password: $password,
-                firstName: $firstName,
-                lastName: $lastName
-            }) {
-                success
-                message
-                token
-                user {
-                  id
-                  email
-                  firstName
-                  lastName
-                }
-            }
-        }
-    `;
-    async function handleSubmit(event) {
-        event.preventDefault();
-        setLoading(true);
-        setError(null);
-        setMessage("");
-        try {
-            const res = await client.mutate({
-                mutation: POST_REGISTER,
-                variables: {
-                    email: event.target.email.value,
-                    password: event.target.password.value,
-                    firstName: event.target.firstName.value,
-                    lastName: event.target.lastName.value
-                }
-            });
-            const registerResult = res.data.signUp;
-            setResult(registerResult);
+    const queryClient = useQueryClient();
+    const setAuth = useAuthStore(state => state.setAuth);
+
+    const mutation = useMutation({
+        mutationFn: (variables) => graphqlRequest(POST_REGISTER, variables),
+        onSuccess(data) {
+            const registerResult = data.signUp;
             if (registerResult.success) {
                 if (registerResult.token) {
                     localStorage.setItem('token', registerResult.token);
                 }
-                // Mutate AuthVar properties instead of reassigning
-                AuthVar.userId = registerResult.user.id || '';
-                AuthVar.email = registerResult.user.email || '';
-                AuthVar.firstName = registerResult.user.firstName || '';
-                AuthVar.lastName = registerResult.user.lastName || '';
-                const token = registerResult.token;
+                if (registerResult.user) {
+                    setAuth({ token: registerResult.token, user: registerResult.user });
+                }
+
+                queryClient.invalidateQueries(['me']);
+
                 try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const payload = JSON.parse(atob(registerResult.token.split('.')[1]));
                     const role = payload.role;
                     if (role === 'ADMIN') navigate('/admin');
                     else navigate('/task');
                 } catch (err) {
-                    // fallback: call me query to fetch role then redirect
                     navigate('/');
                 }
+            } else {
+                setMessage(registerResult.message || 'Registration failed.');
             }
-            else {
-                setMessage(registerResult.message || "Registration failed. Please try again.");
-            }
+        },
+        onError(error) {
+            setBackendError(error);
+        },
+    });
+
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setMessage('');
+        setBackendError(null);
+        const variables = {
+            email: e.target.email.value,
+            password: e.target.password.value,
+            firstName: e.target.firstName.value,
+            lastName: e.target.lastName.value,
+        };
+        try {
+            await mutation.mutateAsync(variables);
         } catch (err) {
-            setError(err);
-        } finally {
-            setLoading(false);
+            // already handled in onError, but can show fallback
+            console.error(err);
         }
     }
+
     return (
         <div className="auth-container">
             <div className="return-btn">
@@ -101,13 +90,13 @@ export default function Register() {
                         <label htmlFor="password">Password</label>
                         <input id="password" name='password' type="password" placeholder="Create a password" required />
                     </div>
-                    <button className="auth-btn" type="submit">Sign Up</button>
+                    <button className="auth-btn" type="submit" disabled={mutation.isLoading}>
+                        {mutation.isLoading ? 'Signing up...' : 'Sign Up'}
+                    </button>
                 </form>
+
                 {message && <div className="auth-message auth-message-error">{message}</div>}
-                {error && <div className="auth-message auth-message-error">{error.message}</div>}
-                {/* <p className="auth-link">
-                    Have an account? <a href="/signin">Sign In</a>
-                </p> */}
+                {backendError && <div className="auth-message auth-message-error">{backendError.message}</div>}
             </div>
         </div>
     );

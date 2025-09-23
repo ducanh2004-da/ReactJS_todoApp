@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { gql } from '@apollo/client';
-import { client } from '../../../graphql/client';
+import { client } from '../../../configs/client.config';
 import { AuthVar } from '../../Auth/AuthVar';
 import toast, { Toaster } from 'react-hot-toast';
 import dayjs from 'dayjs';

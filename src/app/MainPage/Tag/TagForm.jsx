@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { gql } from '@apollo/client';
-import { client } from '../../../graphql/client';
+import { client } from '../../../configs/client.config';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';

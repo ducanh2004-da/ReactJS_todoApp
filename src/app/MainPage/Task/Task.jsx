@@ -1,11 +1,12 @@
 import { gql } from '@apollo/client';
 import { useState, useEffect } from 'react';
-import { client } from '../../../graphql/client';
+import { client } from '../../../configs/client.config';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import TaskForm from './TaskForm';
 import { AuthVar } from '../../Auth/AuthVar';
 import toast, { Toaster } from 'react-hot-toast';
+import { useAuthStore } from '../../../stores/useAuthStore';
 
 export default function Task() {
         const [loading, setLoading] = useState(true);
@@ -16,6 +17,8 @@ export default function Task() {
         const [formOpen, setFormOpen] = useState(false);
         const [totalTag, setTotalTag] = useState([]);
         const paginationModel = { page: 0, pageSize: 5 };
+        const [auth, setAuth] = useState(AuthVar.get());
+        const {user: authUser} = useAuthStore();
 
         const GET_TASKS = gql`
                 query GetTasks($currentPage: Float!, $userId: Float!) {
@@ -82,7 +85,7 @@ export default function Task() {
                                 query: GET_TASKS,
                                 variables: {
                                         currentPage: Number(paginationModel.page) + 1,
-                                        userId: Number(AuthVar.userId)
+                                        userId: Number(authUser.id)
                                 }
                         })
                         .then(({ data }) => {
@@ -139,7 +142,7 @@ export default function Task() {
                                 mutation: SEARCH_TASKS,
                                 variables: {
                                         title: event.target.search.value,
-                                        userId: Number(AuthVar.userId)
+                                        userId: Number(authUser.id)
                                 },
                         });
                         setRows(res.data.search.items);

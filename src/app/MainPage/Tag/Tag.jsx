@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { gql } from "@apollo/client";
-import { client } from "../../../graphql/client";
+import { client } from "../../../configs/client.config";
 import { DataGrid } from "@mui/x-data-grid";
 import { Paper } from "@mui/material";
 import TagForm from "./TagForm";

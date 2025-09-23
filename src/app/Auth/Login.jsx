@@ -1,99 +1,83 @@
-import { client } from '../../graphql/client';
-import { gql } from '@apollo/client';
+// src/app/Auth/Login.jsx
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { graphqlRequest } from '../../configs/api.config';
 import { AuthVar } from './AuthVar';
 import './style.css';
+import { POST_LOGIN, GOOGLE_OAUTH_LOGIN } from './services/login.service';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 export default function Login() {
-    const CLIENT_ID = import.meta.env.VITE_REACT_APP_GOOGLE_CLIENT_ID || import.meta.env.REACT_APP_GOOGLE_CLIENT_ID;
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-    const [backendResp, setBackendResp] = useState(null);
+    const CLIENT_ID = import.meta.env.VITE_REACT_APP_GOOGLE_CLIENT_ID || import.meta.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+    const [message, setMessage] = useState('');
+    const [backendError, setBackendError] = useState(null);
     const googleBtnRef = useRef(null);
     const navigate = useNavigate();
-    const POST_LOGIN = gql`
-        mutation Login($email: String!, $password: String!) {
-            signIn(data: {
-                email: $email,
-                password: $password,
-            }) {
-                success
-                message
-                token
-                user {
-                  id
-                  email
-                  firstName
-                  lastName
-                }
-            }
-        }
-    `;
-    const GOOGLE_OAUTH_LOGIN = gql`
-        mutation GoogleLogin($idToken: String!) {
-            googleLogin(idToken: $idToken) {
-                success
-                message
-                token
-                user {
-                  id
-                  email
-                  firstName
-                  lastName
-                }
-            }
-        }
-    `;
-    async function handleSubmit(event) {
-        event.preventDefault();
-        setLoading(true);
-        setError(null);
-        setMessage("");
-        try {
-            const res = await client.mutate({
-                mutation: POST_LOGIN,
-                variables: {
-                    email: event.target.email.value,
-                    password: event.target.password.value
-                }
-            });
-            const loginResult = res.data.signIn;
-            setResult(loginResult);
+    const queryClient = useQueryClient();
+    const setAuth = useAuthStore(state => state.setAuth);
+    const setUser = useAuthStore(state => state.setUser); // nếu cần riêng
+
+    const loginMutation = useMutation({
+        mutationFn: (vars) => graphqlRequest(POST_LOGIN, vars),
+        onSuccess(data) {
+            const loginResult = data.signIn;
             if (loginResult.success) {
-                if (loginResult.token) {
-                    localStorage.setItem('token', loginResult.token);
-                }
-                // Mutate AuthVar properties instead of reassigning
+                if (loginResult.token) localStorage.setItem('token', loginResult.token);
                 if (loginResult.user) {
-                    AuthVar.userId = loginResult.user.id || '';
-                    AuthVar.email = loginResult.user.email || '';
-                    AuthVar.firstName = loginResult.user.firstName || '';
-                    AuthVar.lastName = loginResult.user.lastName || '';
+                    setAuth({ token: loginResult.token, user: loginResult.user });
                 }
-                const token = loginResult.token;
+                queryClient.invalidateQueries(['me']);
                 try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const payload = JSON.parse(atob(loginResult.token.split('.')[1]));
                     const role = payload.role;
                     if (role === 'ADMIN') navigate('/admin');
                     else navigate('/task');
                 } catch (err) {
-                    // fallback: call me query to fetch role then redirect
                     navigate('/');
                 }
             } else {
-                setMessage(loginResult.message || "Login failed. Please try again.");
+                setMessage(loginResult.message || 'Login failed.');
             }
-        } catch (err) {
-            setError(err);
-        } finally {
-            setLoading(false);
+        },
+        onError(error) {
+            setBackendError(error);
+        },
+    });
+
+
+
+    const googleMutation = useMutation({
+        mutationFn: ({ idToken }) => graphqlRequest(GOOGLE_OAUTH_LOGIN, { idToken }),
+        onSuccess(data) {
+            const loginResult = data.googleLogin;
+            if (loginResult.success) {
+                if (loginResult.token) localStorage.setItem('token', loginResult.token);
+                if (loginResult.user) {
+                    setAuth({ token: loginResult.token, user: loginResult.user });
+                }
+                queryClient.invalidateQueries(['me']);
+                navigate('/task');
+            } else {
+                setMessage(loginResult.message || 'Google login failed.');
+            }
+        },
+        onError(error) {
+            setBackendError(error);
         }
+    });
+
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setMessage('');
+        setBackendError(null);
+        await loginMutation.mutateAsync({
+            email: e.target.email.value,
+            password: e.target.password.value,
+        });
     }
 
-    // Load Google Identity Services script and render button
     useEffect(() => {
         function loadGoogleScript(cb) {
             if (window.google && window.google.accounts && window.google.accounts.id) {
@@ -117,6 +101,7 @@ export default function Login() {
                 }
             }
         }
+
         loadGoogleScript(() => {
             if (window.google && window.google.accounts && window.google.accounts.id && googleBtnRef.current) {
                 window.google.accounts.id.initialize({
@@ -131,42 +116,13 @@ export default function Login() {
         });
     }, [CLIENT_ID]);
 
-    // Log the Google idToken to the console
     async function handleCredentialResponse(response) {
         if (!response || !response.credential) {
-            setError('No credential received from Google');
+            setBackendError(new Error('No credential received from Google'));
             return;
         }
-        try {
-            const res = await client.mutate({
-                mutation: GOOGLE_OAUTH_LOGIN,
-                variables: {
-                    idToken: response.credential
-                }
-            });
-            const loginResult = res.data.googleLogin;
-            setResult(loginResult);
-            if (loginResult.success) {
-                if (loginResult.token) {
-                    localStorage.setItem('token', loginResult.token);
-                }
-                if (loginResult.user) {
-                    AuthVar.userId = loginResult.user.id || '';
-                    AuthVar.email = loginResult.user.email || '';
-                    AuthVar.firstName = loginResult.user.firstName || '';
-                    AuthVar.lastName = loginResult.user.lastName || '';
-                }
-                navigate('/task');
-            } else {
-                setMessage(loginResult.message || "Login failed. Please try again.");
-            }
-        } catch (err) {
-            setError(err);
-        } finally {
-            setLoading(false);
-        }
+        await googleMutation.mutateAsync({ idToken: response.credential });
     }
-
 
     return (
         <div className="auth-container">
@@ -185,38 +141,24 @@ export default function Login() {
                         <label htmlFor="password">Password</label>
                         <input id="password" name='password' type="password" placeholder="Enter your password" required />
                     </div>
-                    <button className="auth-btn" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Log In'}</button>
+                    <button className="auth-btn" type="submit" disabled={loginMutation.isLoading}>
+                        {loginMutation.isLoading ? 'Logging in...' : 'Log In'}
+                    </button>
                 </form>
+
                 <div style={{ textAlign: 'center', margin: '0.5rem 0 0' }}>
                     <span style={{ color: '#aaa', fontWeight: 500 }}>or</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '1.2rem 0' }}>
                     <div ref={googleBtnRef}></div>
                 </div>
+
                 <div style={{ marginTop: 12 }}>
-                    {loading && <div>Loading...</div>}
+                    {(loginMutation.isLoading || googleMutation.isLoading) && <div>Loading...</div>}
                     {message && <div className="auth-message auth-message-error">{message}</div>}
-                    {error && <div className="auth-message auth-message-error">{typeof error === 'string' ? error : error?.message}</div>}
-                    {/* Show a more helpful message for Google OAuth errors */}
-                    {typeof error === 'string' && error.includes('google.com') && (
-                        <div style={{ color: 'crimson', marginTop: 8 }}>
-                            <strong>Google login failed.</strong><br />
-                            Please check your Google Cloud Console OAuth settings.<br />
-                            See the code comments above for details.
-                        </div>
-                    )}
-                    {backendResp && (
-                        <div>
-                            <h3>Backend response</h3>
-                            <pre style={{ background: '#f6f8fa', padding: 8 }}>{JSON.stringify(backendResp, null, 2)}</pre>
-                        </div>
-                    )}
+                    {backendError && <div className="auth-message auth-message-error">{backendError.message}</div>}
                 </div>
-                {/* <p className="auth-link">
-                    Don't have an account? <a href="/signup">Sign Up</a>
-                </p> */}
             </div>
         </div>
     );
 }
-

@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { client } from '../../../graphql/client';
+import { client } from '../../../configs/client.config';
 import { useEffect, useState } from 'react';
 import './style.css'
 export default function Report() {
