@@ -29,8 +29,12 @@ api.interceptors.response.use((res) => res, (error) => {
     try {
       localStorage.removeItem('token');
       window.dispatchEvent(new CustomEvent('auth:logout'));
-    } catch (e) { }
-    window.location.href = '/signin';
+      // avoid immediate redirect in library code; let app handle navigation.
+      // optional: if you must redirect:
+      if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
+        window.location.href = '/signin';
+      }
+    } catch (e) {}
   }
   return Promise.reject(error);
 });

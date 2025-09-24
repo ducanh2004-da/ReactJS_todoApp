@@ -27,7 +27,7 @@ export default function Register() {
                     setAuth({ token: registerResult.token, user: registerResult.user });
                 }
 
-                queryClient.invalidateQueries(['me']);
+                // queryClient.invalidateQueries(['me']);
 
                 try {
                     const payload = JSON.parse(atob(registerResult.token.split('.')[1]));

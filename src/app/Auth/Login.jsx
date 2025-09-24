@@ -7,6 +7,7 @@ import { AuthVar } from './AuthVar';
 import './style.css';
 import { POST_LOGIN, GOOGLE_OAUTH_LOGIN } from './services/login.service';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
     const CLIENT_ID = import.meta.env.VITE_REACT_APP_GOOGLE_CLIENT_ID || import.meta.env.REACT_APP_GOOGLE_CLIENT_ID || '';
@@ -27,7 +28,7 @@ export default function Login() {
                 if (loginResult.user) {
                     setAuth({ token: loginResult.token, user: loginResult.user });
                 }
-                queryClient.invalidateQueries(['me']);
+                // queryClient.invalidateQueries(['me']);
                 try {
                     const payload = JSON.parse(atob(loginResult.token.split('.')[1]));
                     const role = payload.role;
@@ -56,7 +57,7 @@ export default function Login() {
                 if (loginResult.user) {
                     setAuth({ token: loginResult.token, user: loginResult.user });
                 }
-                queryClient.invalidateQueries(['me']);
+                // queryClient.invalidateQueries(['me']);
                 navigate('/task');
             } else {
                 setMessage(loginResult.message || 'Google login failed.');
@@ -78,43 +79,43 @@ export default function Login() {
         });
     }
 
-    useEffect(() => {
-        function loadGoogleScript(cb) {
-            if (window.google && window.google.accounts && window.google.accounts.id) {
-                cb();
-                return;
-            }
-            const existingScript = document.getElementById('google-identity-services');
-            if (!existingScript) {
-                const script = document.createElement('script');
-                script.src = 'https://accounts.google.com/gsi/client';
-                script.async = true;
-                script.defer = true;
-                script.id = 'google-identity-services';
-                script.onload = cb;
-                document.body.appendChild(script);
-            } else {
-                if (existingScript.onload) {
-                    existingScript.onload = () => { existingScript.onload = null; cb(); };
-                } else {
-                    cb();
-                }
-            }
-        }
+    // useEffect(() => {
+    //     function loadGoogleScript(cb) {
+    //         if (window.google && window.google.accounts && window.google.accounts.id) {
+    //             cb();
+    //             return;
+    //         }
+    //         const existingScript = document.getElementById('google-identity-services');
+    //         if (!existingScript) {
+    //             const script = document.createElement('script');
+    //             script.src = 'https://accounts.google.com/gsi/client';
+    //             script.async = true;
+    //             script.defer = true;
+    //             script.id = 'google-identity-services';
+    //             script.onload = cb;
+    //             document.body.appendChild(script);
+    //         } else {
+    //             if (existingScript.onload) {
+    //                 existingScript.onload = () => { existingScript.onload = null; cb(); };
+    //             } else {
+    //                 cb();
+    //             }
+    //         }
+    //     }
 
-        loadGoogleScript(() => {
-            if (window.google && window.google.accounts && window.google.accounts.id && googleBtnRef.current) {
-                window.google.accounts.id.initialize({
-                    client_id: CLIENT_ID,
-                    callback: handleCredentialResponse,
-                });
-                window.google.accounts.id.renderButton(googleBtnRef.current, {
-                    theme: 'outline',
-                    size: 'large',
-                });
-            }
-        });
-    }, [CLIENT_ID]);
+    //     loadGoogleScript(() => {
+    //         if (window.google && window.google.accounts && window.google.accounts.id && googleBtnRef.current) {
+    //             window.google.accounts.id.initialize({
+    //                 client_id: CLIENT_ID,
+    //                 callback: handleCredentialResponse,
+    //             });
+    //             window.google.accounts.id.renderButton(googleBtnRef.current, {
+    //                 theme: 'outline',
+    //                 size: 'large',
+    //             });
+    //         }
+    //     });
+    // }, [CLIENT_ID]);
 
     async function handleCredentialResponse(response) {
         if (!response || !response.credential) {
@@ -150,7 +151,17 @@ export default function Login() {
                     <span style={{ color: '#aaa', fontWeight: 500 }}>or</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', margin: '1.2rem 0' }}>
-                    <div ref={googleBtnRef}></div>
+                    {/* <div ref={googleBtnRef}></div> */}
+                    <GoogleLogin
+                        onSuccess={(credentialResponse) => {
+                            if (credentialResponse?.credential) {
+                                googleMutation.mutate({ idToken: credentialResponse.credential });
+                            } else {
+                                setBackendError(new Error('No credential from Google'));
+                            }
+                        }}
+                        onError={() => setBackendError(new Error('Google login failed'))}
+                    />
                 </div>
 
                 <div style={{ marginTop: 12 }}>
